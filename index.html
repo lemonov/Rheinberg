@@ -33,17 +33,21 @@
         .brand h1 { font-size: 1.2rem; margin: 0; color: var(--accent); line-height: 1.2; }
         .brand h1 span { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 400; text-transform: uppercase; }
 
-        main{ padding:20px; display:flex; justify-content:center; overflow: auto; }
+        main{ padding:20px; display:flex; justify-content:center; overflow: auto; position: relative; }
+
+        /* Conditional Visibility */
+        .control-group { display: none; margin-bottom: 12px; }
+        .control-group.visible { display: block; }
+
         h2{ font-size:0.85rem; margin:20px 0 10px; border-top:1px solid var(--border); padding-top:10px; color:var(--muted); text-transform: uppercase; letter-spacing: 0.05em;}
-
-        .control-group { margin-bottom: 12px; display: none; }
-        .show { display: block; }
-
         label{ display:block; font-size:.8rem; color:var(--muted); margin-bottom:4px; }
+
         input, select{
             width:100%; padding:8px; background:#020617; color:var(--text);
             border:1px solid var(--border); border-radius:6px; box-sizing:border-box;
         }
+
+        input[type="color"] { height: 40px; padding: 2px; cursor: pointer; border: 1px solid var(--border); }
 
         .grid-2{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom:10px;}
 
@@ -51,37 +55,36 @@
             width:100%; padding:12px; margin-top:10px; background:var(--accent);
             color:#020617; border:none; border-radius:8px; font-weight:bold; cursor:pointer;
         }
+        button.success { background: var(--success); color: #064e3b; }
         button.secondary { background: #334155; color: white; }
-        button.danger{ background:var(--danger); color:white; margin-top:5px; }
+        button.danger{ background:var(--danger); color:white; }
 
-        .checkbox-row label{
-            display:flex; align-items:center; gap:8px; font-size:.85rem;
-            color:var(--muted); cursor:pointer; margin-bottom:8px;
+        .info-cloud {
+            position: fixed; bottom: 24px; right: 24px;
+            max-width: 300px; padding: 20px;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); font-size: 0.85rem; line-height: 1.6; z-index: 100;
         }
-        .checkbox-row input{ width:auto; margin:0; }
+        .kb-shortcut { display: inline-block; padding: 2px 6px; background: #334155; border-radius: 4px; font-family: monospace; color: white; font-size: 0.75rem; }
 
-        .template-container{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+        .template-container{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top: 15px; }
         .template-btn{
-            display:flex; flex-direction:column; align-items:center; gap:6px;
-            padding:8px; background:#020617; border:1px solid var(--border);
-            border-radius:6px; cursor:pointer; font-size:.55rem; color:var(--text);
-            transition: border-color 0.2s;
+            display:flex; flex-direction:column; align-items:center; gap:8px;
+            padding:10px; background:#020617; border:1px solid var(--border);
+            border-radius:8px; cursor:pointer; font-size:.55rem; color:var(--text);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
         }
-        .template-btn:hover { border-color: var(--accent); }
-        .template-btn canvas { border-radius: 50%; background: #fff; }
+        .template-btn:hover { transform: scale(1.15); z-index: 10; border-color: var(--accent); background: #0f172a; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .template-btn canvas { border-radius: 50%; background: #fff; pointer-events: none; }
 
-        .disclaimer {
-            margin-top: 30px; padding: 12px; background: rgba(248, 113, 113, 0.05);
-            border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px;
-            font-size: 0.7rem; color: var(--muted); line-height: 1.4;
-        }
-        .disclaimer b { color: var(--danger); }
+        .disclaimer { margin-top: 30px; padding: 12px; background: rgba(248, 113, 113, 0.05); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px; font-size: 0.7rem; color: var(--muted); line-height: 1.4; }
 
         canvas#filterCanvas{ background:white; box-shadow:0 10px 30px rgba(0,0,0,.5); }
 
         @media print{
+            aside, .info-cloud{display:none !important;}
             body{ display: block; background:white; }
-            aside{display:none;}
             canvas#filterCanvas{ width:210mm !important; height:297mm !important; box-shadow:none; }
             @page{ size:A4; margin:0; }
         }
@@ -97,10 +100,9 @@
                 <circle cx="12" cy="12" r="4" fill="var(--accent)" fill-opacity="0.8"/>
                 <circle cx="12" cy="12" r="9" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="2 2"/>
                 <path d="M12 2V5M12 19V22M2 12H5M19 12H22" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M15 7.5C15 7.5 16 8 16.5 9.5" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
             </svg>
         </div>
-        <h1>Filter Designer <span>Pro Edition</span></h1>
+        <h1>Filter Designer <span>Pro</span></h1>
     </div>
 
     <label>Filter Type
@@ -114,6 +116,9 @@
         </select>
     </label>
 
+    <h2>Identification</h2>
+    <label>Filter Label <input type="text" id="filterLabel" placeholder="e.g. Pure Darkfield"></label>
+
     <h2>Dimensions (mm)</h2>
     <div class="grid-2">
         <label>Outer Ø <input type="number" id="outerRadius" value="32" step="0.1"></label>
@@ -126,62 +131,64 @@
         <label>Outer <input type="color" id="outerColor" value="#0000ff"></label>
     </div>
 
-    <div class="control-group" id="grp-label">
-        <label>Label <input type="text" id="filterLabel" placeholder="Filter Name..."></label>
-    </div>
-
-    <div class="control-group" id="grp-rotation">
+    <div id="settings-rotation" class="control-group">
         <label>Rotation (<span id="rotVal">0</span>°)</label>
         <input type="range" id="rotation" min="0" max="360" value="0">
     </div>
 
-    <div class="control-group" id="grp-gradient">
-        <label>Gradient Softness</label>
-        <input type="range" id="gradientStrength" min="0" max="1" step="0.05" value="0.5">
-    </div>
-
-    <div class="control-group" id="grp-spider">
+    <div id="settings-spider" class="control-group">
         <div class="grid-2">
-            <label>Legs <input type="number" id="legCount" value="3" min="2" max="12"></label>
-            <label>Width <input type="number" id="legWidth" value="1" step="0.1"></label>
+            <label>Legs <input type="number" id="spiderLegs" value="3" min="2" max="12"></label>
+            <label>Leg Width <input type="number" id="legWidth" value="1" step="0.1"></label>
         </div>
     </div>
 
-    <div class="control-group" id="grp-offset">
-        <label>Offset Position</label>
-        <input type="range" id="offsetDist" min="0" max="100" value="70">
+    <div id="settings-offset" class="control-group">
+        <label>Offset Distance (%)</label>
+        <input type="range" id="offsetDist" min="0" max="100" value="75">
     </div>
 
-    <div class="control-group" id="grp-sector">
-        <label>Angle (<span id="secVal">90</span>°)</label>
+    <div id="settings-sector" class="control-group">
+        <label>Angle (<span id="angVal">90</span>°)</label>
         <input type="range" id="sectorAngle" min="10" max="350" value="90">
     </div>
 
-    <div class="checkbox-row">
-        <label><input type="checkbox" id="addCompanion" checked> Add companion filter</label>
-        <label><input type="checkbox" id="showCutoutGrid" checked> Show cutout borders</label>
+    <div class="checkbox-row" style="margin-top:10px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="addCompanion" checked style="width:auto"> Add companion filter
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="showCutoutGrid" checked style="width:auto"> Show cutout borders
+        </label>
     </div>
 
-    <button id="addBtn">Add Filter(s)</button>
+    <button id="addBtn">Add to Canvas</button>
+    <button id="printBtn" class="success">Print Sheet (A4)</button>
+
     <div class="grid-2">
-        <button id="exportBtn" class="secondary">Export JSON</button>
-        <button id="importBtn" class="secondary">Import JSON</button>
+        <button id="exportBtn" class="secondary">Export</button>
+        <button id="importBtn" class="secondary">Import</button>
     </div>
     <input type="file" id="importFile" style="display:none" accept=".json">
-    <button id="resetBtn" class="danger">Clear Canvas</button>
+    <button id="resetBtn" class="danger" style="margin-top:10px">Clear All</button>
 
-    <h2>Presets Gallery</h2>
+    <h2>Presets (30)</h2>
     <div id="templateContainer" class="template-container"></div>
 
     <div class="disclaimer">
-        <b>Disclaimer:</b> This tool is provided "as-is" for DIY hobbyist use. The developer assumes
-        <b>no liability</b> for any damage to microscope hardware, optical components, or printed results.
-        Always verify physical clearance of filters before use. Use at your own risk.
+        <b>Disclaimer</b>: DIY hobbyist tool. Developer assumes no liability for hardware damage or printed results. Use at your own risk.
     </div>
 </aside>
 
 <main>
     <canvas id="filterCanvas"></canvas>
+    <div class="info-cloud">
+        <h3 style="color:var(--accent); font-size:0.9rem; margin:0 0 8px 0; text-transform:uppercase;">Technical Guidance</h3>
+        <p style="margin:0 0 10px 0; color:var(--muted);">Print on <b>A4 Transparent Vinyl</b>. Mirrored "Companion" layers ensure total light occlusion.</p>
+        <div style="border-top: 1px solid #334155; padding-top: 10px;">
+            <span class="kb-shortcut">CTRL + P</span> Quick Print
+        </div>
+    </div>
 </main>
 
 <script>
@@ -198,19 +205,18 @@
         draw(c, grid, preview = false) {
             c.save();
             c.translate(this.x, this.y);
-            const labelStr = `${this.label || 'Filter'} (${PX_TO_MM(this.r1*2)}mm)`;
             c.save();
             if (this.mirrored) c.scale(-1, 1);
-            c.rotate(this.rot * Math.PI / 180);
+            c.rotate((this.rot || 0) * Math.PI / 180);
 
             if (this.type === 'spider') {
                 c.fillStyle = this.c1;
                 c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.arc(0,0,this.r1-MM_TO_PX(1.5),0,Math.PI*2,true); c.fill();
                 c.beginPath(); c.arc(0,0,this.r0,0,Math.PI*2); c.fill();
                 c.lineWidth = MM_TO_PX(this.legW || 1); c.strokeStyle = this.c1;
-                for(let i=0; i<this.legs; i++){
-                    c.save(); c.rotate(i * (Math.PI*2/this.legs));
-                    c.beginPath(); c.moveTo(0, this.r0); c.lineTo(0, this.r1-MM_TO_PX(1)); c.stroke();
+                for(let i=0; i<(this.legs||3); i++){
+                    c.save(); c.rotate(i * (Math.PI*2/(this.legs||3)));
+                    c.beginPath(); c.moveTo(0, this.r0); c.lineTo(0, this.r1-MM_TO_PX(1.5)); c.stroke();
                     c.restore();
                 }
             } else if (this.type === 'crescent') {
@@ -224,7 +230,7 @@
                 c.fillStyle = this.c1;
                 c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
                 c.fillStyle = this.c0; c.beginPath();
-                const dist = (this.r1 - this.r0) * (this.offP / 100);
+                const dist = (this.r1 - this.r0) * ((this.offP||75) / 100);
                 c.arc(0, -dist, this.r0, 0, Math.PI*2); c.fill();
             } else if (this.type === 'half') {
                 c.fillStyle = this.c1;
@@ -239,163 +245,128 @@
                 c.arc(0,0,this.r1, -a/2 - Math.PI/2, a/2 - Math.PI/2); c.lineTo(0,0); c.fill();
             } else {
                 const g = c.createRadialGradient(0,0,this.r0,0,0,this.r1);
-                g.addColorStop(0, this.c0); g.addColorStop(Math.max(0.01, this.g), this.c1);
+                g.addColorStop(0, this.c0); g.addColorStop(0.5, this.c1);
                 c.fillStyle = g; c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
                 c.fillStyle = this.c0; c.beginPath(); c.arc(0,0,this.r0,0,Math.PI*2); c.fill();
             }
             c.restore();
 
             if (!preview) {
-                c.fillStyle = "#000"; c.font = "bold 7px sans-serif"; c.textAlign = "center";
-                c.fillText(labelStr, 0, this.r1 + 10);
+                c.fillStyle = "#000"; c.font = "bold 8px sans-serif"; c.textAlign = "center";
+                c.fillText(this.label || 'Filter', 0, this.r1 + 12);
+                c.font = "6px sans-serif";
+                c.fillText(`${PX_TO_MM(this.r1*2)}mm`, 0, this.r1 + 20);
                 if (grid) {
                     c.setLineDash([2, 2]); c.strokeStyle = '#ccc'; c.lineWidth = 0.5;
-                    c.strokeRect(-this.r1, -this.r1, this.r1*2, this.r1*2 + 15);
+                    c.strokeRect(-this.r1, -this.r1, this.r1*2, this.r1*2 + 25);
                 }
             }
             c.restore();
         }
-        hit(px, py) { return Math.hypot(px - this.x, py - this.y) <= this.r1; }
     }
 
     let filters = [];
-
     function redraw() {
         ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
-        let x = 20, y = 20, rowH = 0;
+        let x = 25, y = 25, rowH = 0;
         filters.forEach(f => {
             const d = f.r1 * 2;
-            if (x + d > canvas.width - 20) { x = 20; y += rowH + 10; rowH = 0; }
+            if (x + d > canvas.width - 25) { x = 25; y += rowH + 30; rowH = 0; }
             f.x = x + f.r1; f.y = y + f.r1;
             f.draw(ctx, document.getElementById('showCutoutGrid').checked);
-            x += d + 5; rowH = Math.max(rowH, d + 15);
+            x += d + 15; rowH = Math.max(rowH, d + 25);
         });
     }
 
-    const typeSelect = document.getElementById('centerType');
-    const updateUI = () => {
-        const val = typeSelect.value;
-        const groups = {
-            'solid': ['grp-gradient', 'grp-label'],
-            'spider': ['grp-spider', 'grp-label'],
-            'crescent': ['grp-rotation', 'grp-label'],
-            'offset': ['grp-rotation', 'grp-offset', 'grp-label'],
-            'half': ['grp-rotation', 'grp-label'],
-            'sector': ['grp-rotation', 'grp-sector', 'grp-label']
-        };
-        document.querySelectorAll('.control-group').forEach(el => el.classList.remove('show'));
-        groups[val].forEach(id => document.getElementById(id).classList.add('show'));
+    const toggleSettings = () => {
+        const type = document.getElementById('centerType').value;
+        document.querySelectorAll('.control-group').forEach(el => el.classList.remove('visible'));
+        if (['crescent', 'offset', 'half', 'sector'].includes(type)) document.getElementById('settings-rotation').classList.add('visible');
+        if (type === 'spider') document.getElementById('settings-spider').classList.add('visible');
+        if (type === 'offset') document.getElementById('settings-offset').classList.add('visible');
+        if (type === 'sector') document.getElementById('settings-sector').classList.add('visible');
     };
 
-    typeSelect.onchange = updateUI;
-    document.getElementById('rotation').oninput = e => document.getElementById('rotVal').textContent = e.target.value;
-    document.getElementById('sectorAngle').oninput = e => document.getElementById('secVal').textContent = e.target.value;
+    document.getElementById('centerType').onchange = toggleSettings;
+    document.getElementById('rotation').oninput = e => document.getElementById('rotVal').innerText = e.target.value;
+    document.getElementById('sectorAngle').oninput = e => document.getElementById('angVal').innerText = e.target.value;
+
+    const presets = [
+        { name: 'Pure Darkfield', type: 'solid', c0: '#000000', c1: '#ffffff' },
+        { name: 'Classic R/B', type: 'solid', c0: '#ff0000', c1: '#0000ff' },
+        { name: 'Forest Green', type: 'solid', c0: '#004400', c1: '#00ff00' },
+        { name: 'Amber Glow', type: 'solid', c0: '#ff8800', c1: '#ffff00' },
+        { name: 'Deep Sea', type: 'solid', c0: '#000088', c1: '#00ffff' },
+        { name: 'Magenta Sun', type: 'solid', c0: '#aa00aa', c1: '#ff00ff' },
+        { name: '3-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 3 },
+        { name: '4-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 4 },
+        { name: '6-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 6 },
+        { name: 'Thin Cross', type: 'spider', c0: '#000000', c1: '#000000', legs: 4, legW: 0.5 },
+        { name: 'Blue Crescent', type: 'crescent', c0: '#0000ff', c1: '#ffffff' },
+        { name: 'Red Crescent', type: 'crescent', c0: '#ff0000', c1: '#ffffff' },
+        { name: 'Gold Crescent', type: 'crescent', c0: '#aa8800', c1: '#000000' },
+        { name: 'Soft Gray Obl.', type: 'crescent', c0: '#333333', c1: '#cccccc' },
+        { name: 'Patch 70%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 70 },
+        { name: 'Patch 90%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 90 },
+        { name: 'Cyber Patch', type: 'offset', c0: '#00ffff', c1: '#ff00ff', offP: 80 },
+        { name: 'Solar Eclipse', type: 'offset', c0: '#000000', c1: '#ffcc00', offP: 10 },
+        { name: 'Split Horiz.', type: 'half', c0: '#000000', c1: '#ffffff', rot: 0 },
+        { name: 'Split Vert.', type: 'half', c0: '#000000', c1: '#ffffff', rot: 90 },
+        { name: 'Day/Night', type: 'half', c0: '#000044', c1: '#ffaa00', rot: 45 },
+        { name: 'Red/Blue Split', type: 'half', c0: '#ff0000', c1: '#0000ff', rot: -45 },
+        { name: 'Sector 45°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 45 },
+        { name: 'Sector 90°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 90 },
+        { name: 'Sector 180°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 180 },
+        { name: 'T-Sector', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 270 },
+        { name: 'Bio Neon', type: 'solid', c0: '#ccff00', c1: '#000000' },
+        { name: 'Retro Orange', type: 'sector', c0: '#ff5500', c1: '#331100', ang: 120 },
+        { name: 'Ghost Stop', type: 'solid', c0: '#eeeeee', c1: '#ffffff' },
+        { name: 'Toxic Cross', type: 'spider', c0: '#00ff00', c1: '#004400', legs: 4 }
+    ];
+
+    presets.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'template-btn';
+        const cvs = document.createElement('canvas'); cvs.width=40; cvs.height=40;
+        new Filter({ ...p, r0: 8, r1: 18, x: 20, y: 20 }).draw(cvs.getContext('2d'), false, true);
+        btn.appendChild(cvs);
+        const s = document.createElement('span'); s.textContent = p.name; btn.appendChild(s);
+        btn.onclick = () => {
+            document.getElementById('centerType').value = p.type;
+            document.getElementById('filterLabel').value = p.name;
+            document.getElementById('centerColor').value = p.c0;
+            document.getElementById('outerColor').value = p.c1;
+            toggleSettings();
+            document.getElementById('addBtn').click();
+        };
+        document.getElementById('templateContainer').appendChild(btn);
+    });
 
     document.getElementById('addBtn').onclick = () => {
         const o = {
-            type: typeSelect.value,
+            type: document.getElementById('centerType').value,
+            label: document.getElementById('filterLabel').value || 'Custom',
             c0: document.getElementById('centerColor').value,
             c1: document.getElementById('outerColor').value,
             r0: MM_TO_PX(document.getElementById('centerRadius').value)/2,
             r1: MM_TO_PX(document.getElementById('outerRadius').value)/2,
-            label: document.getElementById('filterLabel').value,
             rot: +document.getElementById('rotation').value,
-            g: +document.getElementById('gradientStrength').value,
-            legs: +document.getElementById('legCount').value,
+            legs: +document.getElementById('spiderLegs').value,
             legW: +document.getElementById('legWidth').value,
             offP: +document.getElementById('offsetDist').value,
             ang: +document.getElementById('sectorAngle').value
         };
         filters.push(new Filter({...o, mirrored: false}));
-        if (document.getElementById('addCompanion').checked) {
-            if (o.type === 'solid') filters.push(new Filter({...o, c1: '#ffffff', g: 0, label: o.label + " (Center)"}));
-            else filters.push(new Filter({...o, mirrored: true}));
-        }
+        if (document.getElementById('addCompanion').checked) filters.push(new Filter({...o, mirrored: true, label: o.label + ' (M)'}));
         redraw();
     };
 
-    const presets = [
-        { name: 'Pure Darkfield', type: 'solid', c0: '#000000', c1: '#ffffff' },
-        { name: 'Soft Darkfield', type: 'solid', c0: '#111111', c1: '#444444', g: 0.8 },
-        { name: 'Classic R/B', type: 'solid', c0: '#ff0000', c1: '#0000ff' },
-        { name: 'Green/Yellow', type: 'solid', c0: '#00cc00', c1: '#ffff00' },
-        { name: 'Teal/Orange', type: 'solid', c0: '#008888', c1: '#ff8800' },
-        { name: 'Deep Purple', type: 'solid', c0: '#440044', c1: '#bb00ff' },
-        { name: 'Nature Green', type: 'solid', c0: '#004400', c1: '#88ff88' },
-        { name: 'Cyan Glow', type: 'solid', c0: '#004466', c1: '#00ffff' },
-        { name: '3-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 3 },
-        { name: '4-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 4 },
-        { name: '6-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 6 },
-        { name: 'Thick Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 3, legW: 3 },
-        { name: 'Blue Oblique', type: 'crescent', c0: '#0000ff', c1: '#ffffff' },
-        { name: 'Red Oblique', type: 'crescent', c0: '#ff0000', c1: '#ffffff' },
-        { name: 'Rainbow Obliq', type: 'crescent', c0: '#ff00ff', c1: '#00ffff' },
-        { name: 'Dark Crescent', type: 'crescent', c0: '#000000', c1: '#ffffff' },
-        { name: 'Patch 70%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 70 },
-        { name: 'Patch 90%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 90 },
-        { name: 'Neon Patch', type: 'offset', c0: '#ff00ff', c1: '#000000', offP: 60 },
-        { name: 'Gold Patch', type: 'offset', c0: '#aa8800', c1: '#000044', offP: 80 },
-        { name: 'Vertical Half', type: 'half', c0: '#000000', c1: '#ffffff', rot: 90 },
-        { name: 'Horiz. Half', type: 'half', c0: '#000000', c1: '#ffffff', rot: 0 },
-        { name: 'Diag. Half', type: 'half', c0: '#440000', c1: '#ffcccc', rot: 45 },
-        { name: 'Soft Half', type: 'half', c0: '#333333', c1: '#eeeeee', rot: 180 },
-        { name: 'Pie 90°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 90 },
-        { name: 'Pie 120°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 120 },
-        { name: 'Pie 180°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 180 },
-        { name: 'Red Wedge', type: 'sector', c0: '#ff0000', c1: '#000000', ang: 45 },
-        { name: 'Cyber 90', type: 'sector', c0: '#00ffff', c1: '#ff00ff', ang: 90 },
-        { name: 'Toxic Sector', type: 'sector', c0: '#ccff00', c1: '#222222', ang: 60 }
-    ];
-
-    const tc = document.getElementById('templateContainer');
-    presets.forEach(p => {
-        const btn = document.createElement('button');
-        btn.className = 'template-btn';
-        const cvs = document.createElement('canvas'); cvs.width=40; cvs.height=40;
-        new Filter({ ...p, r0: 8, r1: 18, g: p.g||0.5, rot: p.rot||0, x: 20, y: 20 }).draw(cvs.getContext('2d'), false, true);
-        btn.appendChild(cvs);
-        const s = document.createElement('span'); s.textContent = p.name; btn.appendChild(s);
-        btn.onclick = () => {
-            typeSelect.value = p.type; updateUI();
-            document.getElementById('centerColor').value = p.c0;
-            document.getElementById('outerColor').value = p.c1;
-            document.getElementById('rotation').value = p.rot || 0;
-            if(p.legs) document.getElementById('legCount').value = p.legs;
-            if(p.ang) document.getElementById('sectorAngle').value = p.ang;
-            document.getElementById('addBtn').click();
-        };
-        tc.appendChild(btn);
-    });
-
-    document.getElementById('exportBtn').onclick = () => {
-        const dataStr = JSON.stringify(filters, null, 2);
-        const blob = new Blob([dataStr], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a'); link.href = url;
-        link.download = `microscope_filters_${new Date().toISOString().slice(0,10)}.json`;
-        link.click();
-    };
-
-    document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
-    document.getElementById('importFile').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            filters = JSON.parse(event.target.result).map(obj => new Filter(obj));
-            redraw();
-        };
-        reader.readAsText(e.target.files[0]);
-    };
-
+    document.getElementById('printBtn').onclick = () => window.print();
+    window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); window.print(); } });
     document.getElementById('resetBtn').onclick = () => { filters = []; redraw(); };
-    canvas.onclick = e => {
-        const rect = canvas.getBoundingClientRect();
-        const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-        const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-        const idx = filters.findLastIndex(f => f.hit(mx, my));
-        if (idx !== -1) { filters.splice(idx, 1); redraw(); }
-    };
 
-    updateUI(); redraw();
+    toggleSettings();
+    redraw();
 </script>
 </body>
 </html>
