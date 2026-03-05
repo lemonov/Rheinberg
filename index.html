@@ -15,13 +15,18 @@
         body{
             margin:0; font-family:system-ui,sans-serif;
             background:linear-gradient(180deg,#020617,#0f172a); color:var(--text);
-            display:grid; grid-template-columns:380px 1fr; min-height:100vh;
+            display:flex; flex-direction:column; min-height:100vh;
+        }
+
+        @media (min-width: 800px) {
+            body { flex-direction:row; align-items:stretch; height: 100vh; overflow: hidden; }
+            aside { width: 380px; flex-shrink: 0; border-right:1px solid var(--border); border-bottom:none; overflow-y: auto; }
+            main { flex: 1; overflow: auto; }
         }
 
         aside{
-            background:var(--panel); border-right:1px solid var(--border);
-            padding:20px; box-sizing:border-box; height: 100vh; overflow-y: auto;
-            scrollbar-width: thin; scrollbar-color: var(--border) var(--panel);
+            background:var(--panel); border-bottom:1px solid var(--border);
+            padding:20px; box-sizing:border-box;
         }
 
         .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
@@ -33,9 +38,10 @@
         .brand h1 { font-size: 1.2rem; margin: 0; color: var(--accent); line-height: 1.2; }
         .brand h1 span { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 400; text-transform: uppercase; }
 
-        main{ padding:20px; display:flex; justify-content:center; overflow: auto; position: relative; }
+        main{ padding:20px; display:flex; justify-content:center; position: relative; overflow-x: auto; }
 
-        /* Conditional Visibility */
+        /* Conditional Visibility Area */
+        .controls-area { min-height: 80px; margin-bottom: 5px; }
         .control-group { display: none; margin-bottom: 12px; }
         .control-group.visible { display: block; }
 
@@ -68,19 +74,24 @@
         }
         .kb-shortcut { display: inline-block; padding: 2px 6px; background: #334155; border-radius: 4px; font-family: monospace; color: white; font-size: 0.75rem; }
 
-        .template-container{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top: 15px; }
+        .preset-group { margin-bottom: 10px; background: #020617; border: 1px solid var(--border); border-radius: 6px; }
+        .preset-group summary { padding: 10px; cursor: pointer; font-size: 0.8rem; font-weight: bold; color: var(--text); user-select: none; }
+        .preset-group summary:hover { background: rgba(56, 189, 248, 0.1); }
+        .preset-group .template-container { margin-top: 0; padding: 10px; padding-top: 0; }
+        .template-container{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top: 15px; width: 100%; box-sizing: border-box; }
         .template-btn{
             display:flex; flex-direction:column; align-items:center; gap:8px;
             padding:10px; background:#020617; border:1px solid var(--border);
-            border-radius:8px; cursor:pointer; font-size:.55rem; color:var(--text);
+            border-radius:8px; cursor:pointer; font-size:.55rem; color:var(--text); text-align: center;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
+            width: 100%; box-sizing: border-box; overflow: hidden;
         }
         .template-btn:hover { transform: scale(1.15); z-index: 10; border-color: var(--accent); background: #0f172a; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
         .template-btn canvas { border-radius: 50%; background: #fff; pointer-events: none; }
 
         .disclaimer { margin-top: 30px; padding: 12px; background: rgba(248, 113, 113, 0.05); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px; font-size: 0.7rem; color: var(--muted); line-height: 1.4; }
 
-        canvas#filterCanvas{ background:white; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+        canvas#filterCanvas{ background:white; box-shadow:0 10px 30px rgba(0,0,0,.5); cursor: crosshair; }
 
         @media print{
             aside, .info-cloud{display:none !important;}
@@ -109,10 +120,13 @@
         <select id="centerType">
             <option value="solid">Rheinberg / Darkfield</option>
             <option value="spider">Spider Stop</option>
+            <option value="ring_spider">Ring Spider</option>
+            <option value="grid_spider">Grid Spider</option>
             <option value="crescent">Oblique (Crescent)</option>
             <option value="offset">Off-center Patch</option>
             <option value="half">Half Moon</option>
             <option value="sector">Sector (Pie)</option>
+            <option value="arc">Peripheral Arc</option>
         </select>
     </label>
 
@@ -124,6 +138,18 @@
         <label>Outer Ø <input type="number" id="outerRadius" value="32" step="0.1"></label>
         <label>Inner Ø <input type="number" id="centerRadius" value="16" step="0.1"></label>
     </div>
+    <h2>Cutout Box (mm)</h2>
+    <div class="grid-2">
+        <label>Width <input type="number" id="boardW" value="38" step="0.1"></label>
+        <label>Height <input type="number" id="boardH" value="46" step="0.1"></label>
+    </div>
+    <label>Alignment
+        <select id="boardAlign">
+            <option value="center">Center</option>
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+        </select>
+    </label>
 
     <h2>Appearance</h2>
     <div class="grid-2">
@@ -131,26 +157,46 @@
         <label>Outer <input type="color" id="outerColor" value="#0000ff"></label>
     </div>
 
-    <div id="settings-rotation" class="control-group">
-        <label>Rotation (<span id="rotVal">0</span>°)</label>
-        <input type="range" id="rotation" min="0" max="360" value="0">
-    </div>
-
-    <div id="settings-spider" class="control-group">
-        <div class="grid-2">
-            <label>Legs <input type="number" id="spiderLegs" value="3" min="2" max="12"></label>
-            <label>Leg Width <input type="number" id="legWidth" value="1" step="0.1"></label>
+    <div class="controls-area">
+        <div id="settings-rotation" class="control-group">
+            <label>Rotation (<span id="rotVal">0</span>°)</label>
+            <input type="range" id="rotation" min="0" max="360" value="0">
         </div>
-    </div>
 
-    <div id="settings-offset" class="control-group">
-        <label>Offset Distance (%)</label>
-        <input type="range" id="offsetDist" min="0" max="100" value="75">
-    </div>
+        <div id="settings-spider" class="control-group">
+            <div class="grid-2">
+                <label>Legs <input type="number" id="spiderLegs" value="3" min="2" max="12"></label>
+                <label>Leg Width <input type="number" id="legWidth" value="1" step="0.1"></label>
+            </div>
+        </div>
 
-    <div id="settings-sector" class="control-group">
-        <label>Angle (<span id="angVal">90</span>°)</label>
-        <input type="range" id="sectorAngle" min="10" max="350" value="90">
+        <div id="settings-offset" class="control-group">
+            <label>Offset Distance (%)</label>
+            <input type="range" id="offsetDist" min="0" max="100" value="75">
+        </div>
+
+        <div id="settings-sector" class="control-group">
+            <label>Angle (<span id="angVal">90</span>°)</label>
+            <input type="range" id="sectorAngle" min="10" max="350" value="90">
+        </div>
+
+        <div id="settings-ring" class="control-group">
+            <div class="grid-2">
+                <label>Ring Start % <input type="number" id="ringStart" value="50" min="10" max="90"></label>
+                <label>Ring Width <input type="number" id="ringWidth" value="2" step="0.1"></label>
+            </div>
+        </div>
+
+        <div id="settings-grid" class="control-group">
+            <div class="grid-2">
+                <label>Hole Ø <input type="number" id="holeSize" value="1.5" step="0.1"></label>
+                <label>Spacing <input type="number" id="holeSpacing" value="2.5" step="0.1"></label>
+            </div>
+        </div>
+
+        <div id="settings-arc" class="control-group">
+            <label>Arc Width (mm) <input type="number" id="arcWidth" value="4" step="0.1"></label>
+        </div>
     </div>
 
     <div class="checkbox-row" style="margin-top:10px;">
@@ -172,8 +218,8 @@
     <input type="file" id="importFile" style="display:none" accept=".json">
     <button id="resetBtn" class="danger" style="margin-top:10px">Clear All</button>
 
-    <h2>Presets (30)</h2>
-    <div id="templateContainer" class="template-container"></div>
+    <h2>Presets</h2>
+    <div id="templateContainer"></div>
 
     <div class="disclaimer">
         <b>Disclaimer</b>: DIY hobbyist tool. Developer assumes no liability for hardware damage or printed results. Use at your own risk.
@@ -203,20 +249,63 @@
     class Filter {
         constructor(o) { Object.assign(this, o); }
         draw(c, grid, preview = false) {
+            const toPx = mm => preview ? mm * (this.r1 / 16) : MM_TO_PX(mm);
+            const bw = this.boardW || (this.r1 * 2 + MM_TO_PX(4));
+            const bh = this.boardH || (this.r1 * 2 + MM_TO_PX(14));
+            let alignY = 0;
+            if (!preview) {
+                if (this.align === 'top') alignY = -bh/2 + this.r1 + MM_TO_PX(2);
+                else if (this.align === 'bottom') alignY = bh/2 - this.r1 - MM_TO_PX(12);
+            }
+
             c.save();
             c.translate(this.x, this.y);
+
+            if (!preview && grid) {
+                c.save();
+                c.setLineDash([]); c.strokeStyle = '#000'; c.lineWidth = 1;
+                c.strokeRect(-bw/2, -bh/2, bw, bh);
+                c.restore();
+            }
+
             c.save();
+            c.translate(0, alignY);
             if (this.mirrored) c.scale(-1, 1);
             c.rotate((this.rot || 0) * Math.PI / 180);
 
-            if (this.type === 'spider') {
+            if (this.type === 'spider' || this.type === 'ring_spider' || this.type === 'grid_spider') {
                 c.fillStyle = this.c1;
-                c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.arc(0,0,this.r1-MM_TO_PX(1.5),0,Math.PI*2,true); c.fill();
+                c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.arc(0,0,Math.max(0.1, this.r1-toPx(1.5)),0,Math.PI*2,true); c.fill();
                 c.beginPath(); c.arc(0,0,this.r0,0,Math.PI*2); c.fill();
-                c.lineWidth = MM_TO_PX(this.legW || 1); c.strokeStyle = this.c1;
+                
+                if (this.type === 'grid_spider') {
+                    c.save();
+                    c.beginPath(); c.arc(0,0,this.r0,0,Math.PI*2); c.clip();
+                    c.fillStyle = this.c0;
+                    const hs = toPx(this.holeSz || 1.5);
+                    const sp = toPx(this.holeSp || 2.5);
+                    const cols = Math.ceil(this.r0 * 2 / sp);
+                    const rows = Math.ceil(this.r0 * 2 / (sp * Math.sqrt(3)/2));
+                    for(let r = -rows; r <= rows; r++) {
+                        for(let cl = -cols; cl <= cols; cl++) {
+                            const hx = cl * sp + (r % 2 === 0 ? 0 : sp/2);
+                            const hy = r * sp * Math.sqrt(3)/2;
+                            c.beginPath(); c.arc(hx, hy, hs/2, 0, Math.PI*2); c.fill();
+                        }
+                    }
+                    c.restore();
+                }
+
+                if (this.type === 'ring_spider') {
+                    const rMid = this.r0 + (this.r1 - this.r0) * ((this.ringS || 50) / 100);
+                    const rw = toPx(this.ringW || 2) / 2;
+                    c.beginPath(); c.arc(0,0,rMid + rw, 0, Math.PI*2); c.arc(0,0,Math.max(0.1, rMid - rw), 0, Math.PI*2, true); c.fill();
+                }
+
+                c.lineWidth = Math.max(0.5, toPx(this.legW || 1)); c.strokeStyle = this.c1;
                 for(let i=0; i<(this.legs||3); i++){
                     c.save(); c.rotate(i * (Math.PI*2/(this.legs||3)));
-                    c.beginPath(); c.moveTo(0, this.r0); c.lineTo(0, this.r1-MM_TO_PX(1.5)); c.stroke();
+                    c.beginPath(); c.moveTo(0, this.r0); c.lineTo(0, Math.max(0, this.r1-toPx(1.5))); c.stroke();
                     c.restore();
                 }
             } else if (this.type === 'crescent') {
@@ -243,6 +332,16 @@
                 c.fillStyle = this.c0; c.beginPath(); c.moveTo(0,0);
                 const a = (this.ang || 90) * Math.PI / 180;
                 c.arc(0,0,this.r1, -a/2 - Math.PI/2, a/2 - Math.PI/2); c.lineTo(0,0); c.fill();
+            } else if (this.type === 'arc') {
+                c.fillStyle = this.c0;
+                c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
+                c.fillStyle = this.c1;
+                const a = (this.ang || 90) * Math.PI / 180;
+                const aw = toPx(this.arcW || 4);
+                c.beginPath();
+                c.arc(0,0,this.r1, -a/2 - Math.PI/2, a/2 - Math.PI/2);
+                c.arc(0,0,Math.max(0.1, this.r1 - aw), a/2 - Math.PI/2, -a/2 - Math.PI/2, true);
+                c.fill();
             } else {
                 const g = c.createRadialGradient(0,0,this.r0,0,0,this.r1);
                 g.addColorStop(0, this.c0); g.addColorStop(0.5, this.c1);
@@ -253,13 +352,9 @@
 
             if (!preview) {
                 c.fillStyle = "#000"; c.font = "bold 8px sans-serif"; c.textAlign = "center";
-                c.fillText(this.label || 'Filter', 0, this.r1 + 12);
+                c.fillText(this.label || 'Filter', 0, alignY + this.r1 + 14);
                 c.font = "6px sans-serif";
-                c.fillText(`${PX_TO_MM(this.r1*2)}mm`, 0, this.r1 + 20);
-                if (grid) {
-                    c.setLineDash([2, 2]); c.strokeStyle = '#ccc'; c.lineWidth = 0.5;
-                    c.strokeRect(-this.r1, -this.r1, this.r1*2, this.r1*2 + 25);
-                }
+                c.fillText(`${PX_TO_MM(this.r1*2)}mm`, 0, alignY + this.r1 + 22);
             }
             c.restore();
         }
@@ -268,78 +363,130 @@
     let filters = [];
     function redraw() {
         ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
-        let x = 25, y = 25, rowH = 0;
+        let x = 0, y = 0, rowH = 0;
         filters.forEach(f => {
-            const d = f.r1 * 2;
-            if (x + d > canvas.width - 25) { x = 25; y += rowH + 30; rowH = 0; }
-            f.x = x + f.r1; f.y = y + f.r1;
+            const bw = f.boardW || (f.r1 * 2 + MM_TO_PX(4));
+            const bh = f.boardH || (f.r1 * 2 + MM_TO_PX(14));
+            if (x + bw > canvas.width) { x = 0; y += rowH; rowH = 0; }
+            f.x = x + bw/2; f.y = y + bh/2;
             f.draw(ctx, document.getElementById('showCutoutGrid').checked);
-            x += d + 15; rowH = Math.max(rowH, d + 25);
+            x += bw; rowH = Math.max(rowH, bh);
         });
     }
 
     const toggleSettings = () => {
         const type = document.getElementById('centerType').value;
         document.querySelectorAll('.control-group').forEach(el => el.classList.remove('visible'));
-        if (['crescent', 'offset', 'half', 'sector'].includes(type)) document.getElementById('settings-rotation').classList.add('visible');
-        if (type === 'spider') document.getElementById('settings-spider').classList.add('visible');
+        if (['crescent', 'offset', 'half', 'sector', 'arc'].includes(type)) document.getElementById('settings-rotation').classList.add('visible');
+        if (['spider', 'ring_spider', 'grid_spider'].includes(type)) document.getElementById('settings-spider').classList.add('visible');
         if (type === 'offset') document.getElementById('settings-offset').classList.add('visible');
         if (type === 'sector') document.getElementById('settings-sector').classList.add('visible');
+        if (type === 'ring_spider') document.getElementById('settings-ring').classList.add('visible');
+        if (type === 'grid_spider') document.getElementById('settings-grid').classList.add('visible');
+        if (type === 'arc') document.getElementById('settings-arc').classList.add('visible');
     };
 
     document.getElementById('centerType').onchange = toggleSettings;
     document.getElementById('rotation').oninput = e => document.getElementById('rotVal').innerText = e.target.value;
     document.getElementById('sectorAngle').oninput = e => document.getElementById('angVal').innerText = e.target.value;
 
-    const presets = [
-        { name: 'Pure Darkfield', type: 'solid', c0: '#000000', c1: '#ffffff' },
-        { name: 'Classic R/B', type: 'solid', c0: '#ff0000', c1: '#0000ff' },
-        { name: 'Forest Green', type: 'solid', c0: '#004400', c1: '#00ff00' },
-        { name: 'Amber Glow', type: 'solid', c0: '#ff8800', c1: '#ffff00' },
-        { name: 'Deep Sea', type: 'solid', c0: '#000088', c1: '#00ffff' },
-        { name: 'Magenta Sun', type: 'solid', c0: '#aa00aa', c1: '#ff00ff' },
-        { name: '3-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 3 },
-        { name: '4-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 4 },
-        { name: '6-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 6 },
-        { name: 'Thin Cross', type: 'spider', c0: '#000000', c1: '#000000', legs: 4, legW: 0.5 },
-        { name: 'Blue Crescent', type: 'crescent', c0: '#0000ff', c1: '#ffffff' },
-        { name: 'Red Crescent', type: 'crescent', c0: '#ff0000', c1: '#ffffff' },
-        { name: 'Gold Crescent', type: 'crescent', c0: '#aa8800', c1: '#000000' },
-        { name: 'Soft Gray Obl.', type: 'crescent', c0: '#333333', c1: '#cccccc' },
-        { name: 'Patch 70%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 70 },
-        { name: 'Patch 90%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 90 },
-        { name: 'Cyber Patch', type: 'offset', c0: '#00ffff', c1: '#ff00ff', offP: 80 },
-        { name: 'Solar Eclipse', type: 'offset', c0: '#000000', c1: '#ffcc00', offP: 10 },
-        { name: 'Split Horiz.', type: 'half', c0: '#000000', c1: '#ffffff', rot: 0 },
-        { name: 'Split Vert.', type: 'half', c0: '#000000', c1: '#ffffff', rot: 90 },
-        { name: 'Day/Night', type: 'half', c0: '#000044', c1: '#ffaa00', rot: 45 },
-        { name: 'Red/Blue Split', type: 'half', c0: '#ff0000', c1: '#0000ff', rot: -45 },
-        { name: 'Sector 45°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 45 },
-        { name: 'Sector 90°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 90 },
-        { name: 'Sector 180°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 180 },
-        { name: 'T-Sector', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 270 },
-        { name: 'Bio Neon', type: 'solid', c0: '#ccff00', c1: '#000000' },
-        { name: 'Retro Orange', type: 'sector', c0: '#ff5500', c1: '#331100', ang: 120 },
-        { name: 'Ghost Stop', type: 'solid', c0: '#eeeeee', c1: '#ffffff' },
-        { name: 'Toxic Cross', type: 'spider', c0: '#00ff00', c1: '#004400', legs: 4 }
-    ];
+    const presets = {
+        "Solid & Rheinberg": [
+            { name: 'Pure Darkfield', type: 'solid', c0: '#000000', c1: '#ffffff' },
+            { name: 'Classic R/B', type: 'solid', c0: '#ff0000', c1: '#0000ff' },
+            { name: 'Forest Green', type: 'solid', c0: '#004400', c1: '#00ff00' },
+            { name: 'Amber Glow', type: 'solid', c0: '#ff8800', c1: '#ffff00' },
+            { name: 'Deep Sea', type: 'solid', c0: '#000088', c1: '#00ffff' },
+            { name: 'Magenta Sun', type: 'solid', c0: '#aa00aa', c1: '#ff00ff' },
+            { name: 'Bio Neon', type: 'solid', c0: '#ccff00', c1: '#000000' },
+            { name: 'Ghost Stop', type: 'solid', c0: '#eeeeee', c1: '#ffffff' }
+        ],
+        "Spider Stops": [
+            { name: '3-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 3 },
+            { name: '4-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 4 },
+            { name: '6-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 6 },
+            { name: 'Thin Cross', type: 'spider', c0: '#000000', c1: '#000000', legs: 4, legW: 0.5 },
+            { name: 'Toxic Cross', type: 'spider', c0: '#00ff00', c1: '#004400', legs: 4 }
+        ],
+        "Advanced Spiders": [
+            { name: 'Dual Ring Spider', type: 'ring_spider', c0: '#000000', c1: '#000000', legs: 3, ringS: 50, ringW: 3 },
+            { name: 'Thick Ring Spider', type: 'ring_spider', c0: '#000000', c1: '#000000', legs: 4, ringS: 60, ringW: 5 },
+            { name: 'Honeycomb Spider', type: 'grid_spider', c0: '#ffffff', c1: '#000000', legs: 3, holeSz: 2, holeSp: 3 },
+            { name: 'Dense Grid Spider', type: 'grid_spider', c0: '#ffffff', c1: '#000000', legs: 4, holeSz: 1.2, holeSp: 2 }
+        ],
+        "Crescent & Oblique": [
+            { name: 'Blue Crescent', type: 'crescent', c0: '#0000ff', c1: '#ffffff' },
+            { name: 'Red Crescent', type: 'crescent', c0: '#ff0000', c1: '#ffffff' },
+            { name: 'Gold Crescent', type: 'crescent', c0: '#aa8800', c1: '#000000' },
+            { name: 'Soft Gray Obl.', type: 'crescent', c0: '#333333', c1: '#cccccc' }
+        ],
+        "Offset Patches": [
+            { name: 'Patch 70%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 70 },
+            { name: 'Patch 90%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 90 },
+            { name: 'Cyber Patch', type: 'offset', c0: '#00ffff', c1: '#ff00ff', offP: 80 },
+            { name: 'Solar Eclipse', type: 'offset', c0: '#000000', c1: '#ffcc00', offP: 10 }
+        ],
+        "Sectors & Arcs": [
+            { name: 'Split Horiz.', type: 'half', c0: '#000000', c1: '#ffffff', rot: 0 },
+            { name: 'Split Vert.', type: 'half', c0: '#000000', c1: '#ffffff', rot: 90 },
+            { name: 'Day/Night', type: 'half', c0: '#000044', c1: '#ffaa00', rot: 45 },
+            { name: 'Red/Blue Split', type: 'half', c0: '#ff0000', c1: '#0000ff', rot: -45 },
+            { name: 'Sector 45°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 45 },
+            { name: 'Sector 90°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 90 },
+            { name: 'T-Sector', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 270 },
+            { name: 'Peripheral Arc 90°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 90, arcW: 4, rot: 0 },
+            { name: 'Peripheral Arc 180°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 180, arcW: 6, rot: 0 },
+            { name: 'Peripheral Arc 270°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 270, arcW: 2, rot: 0 }
+        ]
+    };
 
-    presets.forEach(p => {
-        const btn = document.createElement('button');
-        btn.className = 'template-btn';
-        const cvs = document.createElement('canvas'); cvs.width=40; cvs.height=40;
-        new Filter({ ...p, r0: 8, r1: 18, x: 20, y: 20 }).draw(cvs.getContext('2d'), false, true);
-        btn.appendChild(cvs);
-        const s = document.createElement('span'); s.textContent = p.name; btn.appendChild(s);
-        btn.onclick = () => {
-            document.getElementById('centerType').value = p.type;
-            document.getElementById('filterLabel').value = p.name;
-            document.getElementById('centerColor').value = p.c0;
-            document.getElementById('outerColor').value = p.c1;
-            toggleSettings();
-            document.getElementById('addBtn').click();
-        };
-        document.getElementById('templateContainer').appendChild(btn);
+    const container = document.getElementById('templateContainer');
+    Object.entries(presets).forEach(([category, list]) => {
+        const details = document.createElement('details');
+        details.className = 'preset-group';
+        // Expand the first one by default
+        if (category === "Solid & Rheinberg") details.open = true;
+        
+        const summary = document.createElement('summary');
+        summary.textContent = `${category} (${list.length})`;
+        details.appendChild(summary);
+        
+        const grid = document.createElement('div');
+        grid.className = 'template-container';
+        
+        list.forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'template-btn';
+            const cvs = document.createElement('canvas'); cvs.width=40; cvs.height=40;
+            // Provide sensible defaults for the preview thumbnail to prevent errors
+            new Filter({ ...p, r0: 8, r1: 18, x: 20, y: 20, boardW: 40, boardH: 40 }).draw(cvs.getContext('2d'), false, true);
+            btn.appendChild(cvs);
+            const s = document.createElement('span'); s.textContent = p.name; btn.appendChild(s);
+            btn.onclick = () => {
+                document.getElementById('centerType').value = p.type;
+                document.getElementById('filterLabel').value = p.name;
+                document.getElementById('centerColor').value = p.c0;
+                document.getElementById('outerColor').value = p.c1;
+                if (p.legs !== undefined) document.getElementById('spiderLegs').value = p.legs;
+                if (p.legW !== undefined) document.getElementById('legWidth').value = p.legW;
+                if (p.ringS !== undefined) document.getElementById('ringStart').value = p.ringS;
+                if (p.ringW !== undefined) document.getElementById('ringWidth').value = p.ringW;
+                if (p.holeSz !== undefined) document.getElementById('holeSize').value = p.holeSz;
+                if (p.holeSp !== undefined) document.getElementById('holeSpacing').value = p.holeSp;
+                if (p.offP !== undefined) document.getElementById('offsetDist').value = p.offP;
+                if (p.ang !== undefined) document.getElementById('sectorAngle').value = p.ang;
+                if (p.arcW !== undefined) document.getElementById('arcWidth').value = p.arcW;
+                if (p.rot !== undefined) {
+                    document.getElementById('rotation').value = p.rot;
+                    document.getElementById('rotVal').innerText = p.rot;
+                }
+                toggleSettings();
+                document.getElementById('addBtn').click();
+            };
+            grid.appendChild(btn);
+        });
+        details.appendChild(grid);
+        container.appendChild(details);
     });
 
     document.getElementById('addBtn').onclick = () => {
@@ -350,20 +497,77 @@
             c1: document.getElementById('outerColor').value,
             r0: MM_TO_PX(document.getElementById('centerRadius').value)/2,
             r1: MM_TO_PX(document.getElementById('outerRadius').value)/2,
+            boardW: MM_TO_PX(document.getElementById('boardW').value),
+            boardH: MM_TO_PX(document.getElementById('boardH').value),
+            align: document.getElementById('boardAlign').value,
             rot: +document.getElementById('rotation').value,
             legs: +document.getElementById('spiderLegs').value,
             legW: +document.getElementById('legWidth').value,
+            ringS: +document.getElementById('ringStart').value,
+            ringW: +document.getElementById('ringWidth').value,
+            holeSz: +document.getElementById('holeSize').value,
+            holeSp: +document.getElementById('holeSpacing').value,
             offP: +document.getElementById('offsetDist').value,
-            ang: +document.getElementById('sectorAngle').value
+            ang: +document.getElementById('sectorAngle').value,
+            arcW: +document.getElementById('arcWidth').value
         };
         filters.push(new Filter({...o, mirrored: false}));
         if (document.getElementById('addCompanion').checked) filters.push(new Filter({...o, mirrored: true, label: o.label + ' (M)'}));
         redraw();
     };
 
+    canvas.addEventListener('click', e => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+
+        for (let i = filters.length - 1; i >= 0; i--) {
+            const f = filters[i];
+            const bw = f.boardW || (f.r1 * 2 + MM_TO_PX(4));
+            const bh = f.boardH || (f.r1 * 2 + MM_TO_PX(14));
+            
+            if (clickX >= f.x - bw/2 && clickX <= f.x + bw/2 &&
+                clickY >= f.y - bh/2 && clickY <= f.y + bh/2) {
+                filters.splice(i, 1);
+                redraw();
+                break;
+            }
+        }
+    });
+
     document.getElementById('printBtn').onclick = () => window.print();
     window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); window.print(); } });
     document.getElementById('resetBtn').onclick = () => { filters = []; redraw(); };
+
+    document.getElementById('exportBtn').onclick = () => {
+        if (!filters.length) return alert('No filters to export!');
+        const data = JSON.stringify(filters);
+        const blob = new Blob([data], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'filters.json'; a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+    document.getElementById('importFile').onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (Array.isArray(data)) {
+                    filters = data.map(f => new Filter(f));
+                    redraw();
+                }
+            } catch (err) { alert('Invalid file format'); }
+        };
+        reader.readAsText(file);
+        e.target.value = ''; // Reset input
+    };
 
     toggleSettings();
     redraw();
