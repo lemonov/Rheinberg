@@ -156,6 +156,9 @@
         <label>Inner <input type="color" id="centerColor" value="#ff0000"></label>
         <label>Outer <input type="color" id="outerColor" value="#0000ff"></label>
     </div>
+    <label style="margin-bottom: 12px;">Edge Hardness (<span id="hardVal">100</span>%)
+        <input type="range" id="hardness" min="0" max="100" value="100">
+    </label>
 
     <div class="controls-area">
         <div id="settings-rotation" class="control-group">
@@ -209,6 +212,7 @@
     </div>
 
     <button id="addBtn">Add to Canvas</button>
+    <button id="randomBtn" class="secondary" style="margin-top:5px; margin-bottom: 5px;">Surprise Me (Random)</button>
     <button id="printBtn" class="success">Print Sheet (A4)</button>
 
     <div class="grid-2">
@@ -254,8 +258,8 @@
             const bh = this.boardH || (this.r1 * 2 + MM_TO_PX(14));
             let alignY = 0;
             if (!preview) {
-                if (this.align === 'top') alignY = -bh/2 + this.r1 + MM_TO_PX(2);
-                else if (this.align === 'bottom') alignY = bh/2 - this.r1 - MM_TO_PX(12);
+                if (this.align === 'top') alignY = -bh/2 + this.r1;
+                else if (this.align === 'bottom') alignY = bh/2 - this.r1;
             }
 
             c.save();
@@ -273,9 +277,17 @@
             if (this.mirrored) c.scale(-1, 1);
             c.rotate((this.rot || 0) * Math.PI / 180);
 
+            const hard = this.hard !== undefined ? this.hard : 100;
+
             if (this.type === 'spider' || this.type === 'ring_spider' || this.type === 'grid_spider') {
                 c.fillStyle = this.c1;
                 c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.arc(0,0,Math.max(0.1, this.r1-toPx(1.5)),0,Math.PI*2,true); c.fill();
+                
+                c.save();
+                c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.clip();
+                if (hard < 100 && !preview) c.filter = `blur(${toPx((100 - hard) * 0.05)}px)`;
+
+                c.fillStyle = this.c1;
                 c.beginPath(); c.arc(0,0,this.r0,0,Math.PI*2); c.fill();
                 
                 if (this.type === 'grid_spider') {
@@ -305,56 +317,84 @@
                 c.lineWidth = Math.max(0.5, toPx(this.legW || 1)); c.strokeStyle = this.c1;
                 for(let i=0; i<(this.legs||3); i++){
                     c.save(); c.rotate(i * (Math.PI*2/(this.legs||3)));
-                    c.beginPath(); c.moveTo(0, this.r0); c.lineTo(0, Math.max(0, this.r1-toPx(1.5))); c.stroke();
+                    c.beginPath(); c.moveTo(0, this.r0); c.lineTo(0, this.r1 * 1.5); c.stroke();
                     c.restore();
                 }
+                c.restore();
             } else if (this.type === 'crescent') {
                 c.fillStyle = this.c1;
                 c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
                 c.save(); c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.clip();
+                if (hard < 100 && !preview) c.filter = `blur(${toPx((100 - hard) * 0.05)}px)`;
                 c.fillStyle = this.c0; c.beginPath();
-                c.arc(0, -(this.r1 - this.r0 * 0.7), this.r1 * 1.2, 0, Math.PI*2); c.fill();
+                c.arc(0, -(this.r1 - this.r0 * 0.7), this.r1 * 1.5, 0, Math.PI*2); c.fill();
                 c.restore();
             } else if (this.type === 'offset') {
                 c.fillStyle = this.c1;
                 c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
+                c.save(); c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.clip();
+                if (hard < 100 && !preview) c.filter = `blur(${toPx((100 - hard) * 0.05)}px)`;
                 c.fillStyle = this.c0; c.beginPath();
                 const dist = (this.r1 - this.r0) * ((this.offP||75) / 100);
                 c.arc(0, -dist, this.r0, 0, Math.PI*2); c.fill();
+                c.restore();
             } else if (this.type === 'half') {
                 c.fillStyle = this.c1;
                 c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
+                c.save(); c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.clip();
+                if (hard < 100 && !preview) c.filter = `blur(${toPx((100 - hard) * 0.05)}px)`;
                 c.fillStyle = this.c0; c.beginPath();
-                c.arc(0,0,this.r1,0,Math.PI, true); c.fill();
+                c.arc(0,0,this.r1 * 1.5,0,Math.PI, true); c.fill();
+                c.restore();
             } else if (this.type === 'sector') {
                 c.fillStyle = this.c1;
                 c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
+                c.save(); c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.clip();
+                if (hard < 100 && !preview) c.filter = `blur(${toPx((100 - hard) * 0.05)}px)`;
                 c.fillStyle = this.c0; c.beginPath(); c.moveTo(0,0);
                 const a = (this.ang || 90) * Math.PI / 180;
-                c.arc(0,0,this.r1, -a/2 - Math.PI/2, a/2 - Math.PI/2); c.lineTo(0,0); c.fill();
+                c.arc(0,0,this.r1 * 1.5, -a/2 - Math.PI/2, a/2 - Math.PI/2); c.lineTo(0,0); c.fill();
+                c.restore();
             } else if (this.type === 'arc') {
                 c.fillStyle = this.c0;
                 c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
+                c.save(); c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.clip();
+                if (hard < 100 && !preview) c.filter = `blur(${toPx((100 - hard) * 0.05)}px)`;
                 c.fillStyle = this.c1;
                 const a = (this.ang || 90) * Math.PI / 180;
                 const aw = toPx(this.arcW || 4);
                 c.beginPath();
-                c.arc(0,0,this.r1, -a/2 - Math.PI/2, a/2 - Math.PI/2);
+                c.arc(0,0,this.r1 * 1.5, -a/2 - Math.PI/2, a/2 - Math.PI/2);
                 c.arc(0,0,Math.max(0.1, this.r1 - aw), a/2 - Math.PI/2, -a/2 - Math.PI/2, true);
                 c.fill();
+                c.restore();
             } else {
-                const g = c.createRadialGradient(0,0,this.r0,0,0,this.r1);
-                g.addColorStop(0, this.c0); g.addColorStop(0.5, this.c1);
-                c.fillStyle = g; c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
-                c.fillStyle = this.c0; c.beginPath(); c.arc(0,0,this.r0,0,Math.PI*2); c.fill();
+                if (hard >= 99) {
+                    c.fillStyle = this.c1; c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
+                    c.fillStyle = this.c0; c.beginPath(); c.arc(0,0,this.r0,0,Math.PI*2); c.fill();
+                } else {
+                    const blurDist = Math.max(0.01, 1 - (hard / 100));
+                    const g = c.createRadialGradient(0,0,this.r0,0,0,this.r1);
+                    g.addColorStop(0, this.c0); 
+                    g.addColorStop(blurDist, this.c1);
+                    g.addColorStop(1, this.c1);
+                    c.fillStyle = g; c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
+                    c.fillStyle = this.c0; c.beginPath(); c.arc(0,0,this.r0,0,Math.PI*2); c.fill();
+                }
             }
             c.restore();
 
             if (!preview) {
                 c.fillStyle = "#000"; c.font = "bold 8px sans-serif"; c.textAlign = "center";
-                c.fillText(this.label || 'Filter', 0, alignY + this.r1 + 14);
-                c.font = "6px sans-serif";
-                c.fillText(`${PX_TO_MM(this.r1*2)}mm`, 0, alignY + this.r1 + 22);
+                if (this.align === 'bottom') {
+                    c.fillText(this.label || 'Filter', 0, alignY - this.r1 - 16);
+                    c.font = "6px sans-serif";
+                    c.fillText(`${PX_TO_MM(this.r1*2)}mm`, 0, alignY - this.r1 - 8);
+                } else {
+                    c.fillText(this.label || 'Filter', 0, alignY + this.r1 + 14);
+                    c.font = "6px sans-serif";
+                    c.fillText(`${PX_TO_MM(this.r1*2)}mm`, 0, alignY + this.r1 + 22);
+                }
             }
             c.restore();
         }
@@ -388,6 +428,7 @@
 
     document.getElementById('centerType').onchange = toggleSettings;
     document.getElementById('rotation').oninput = e => document.getElementById('rotVal').innerText = e.target.value;
+    document.getElementById('hardness').oninput = e => document.getElementById('hardVal').innerText = e.target.value;
     document.getElementById('sectorAngle').oninput = e => document.getElementById('angVal').innerText = e.target.value;
 
     const presets = {
@@ -476,6 +517,13 @@
                 if (p.offP !== undefined) document.getElementById('offsetDist').value = p.offP;
                 if (p.ang !== undefined) document.getElementById('sectorAngle').value = p.ang;
                 if (p.arcW !== undefined) document.getElementById('arcWidth').value = p.arcW;
+                if (p.hard !== undefined) {
+                    document.getElementById('hardness').value = p.hard;
+                    document.getElementById('hardVal').innerText = p.hard;
+                } else {
+                    document.getElementById('hardness').value = 100;
+                    document.getElementById('hardVal').innerText = 100;
+                }
                 if (p.rot !== undefined) {
                     document.getElementById('rotation').value = p.rot;
                     document.getElementById('rotVal').innerText = p.rot;
@@ -495,6 +543,7 @@
             label: document.getElementById('filterLabel').value || 'Custom',
             c0: document.getElementById('centerColor').value,
             c1: document.getElementById('outerColor').value,
+            hard: +document.getElementById('hardness').value,
             r0: MM_TO_PX(document.getElementById('centerRadius').value)/2,
             r1: MM_TO_PX(document.getElementById('outerRadius').value)/2,
             boardW: MM_TO_PX(document.getElementById('boardW').value),
@@ -514,6 +563,40 @@
         filters.push(new Filter({...o, mirrored: false}));
         if (document.getElementById('addCompanion').checked) filters.push(new Filter({...o, mirrored: true, label: o.label + ' (M)'}));
         redraw();
+    };
+
+    document.getElementById('randomBtn').onclick = () => {
+        const types = ['solid', 'spider', 'ring_spider', 'grid_spider', 'crescent', 'offset', 'half', 'sector', 'arc'];
+        const randomType = types[Math.floor(Math.random() * types.length)];
+        
+        const randomHex = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+        
+        document.getElementById('centerType').value = randomType;
+        document.getElementById('centerColor').value = randomHex();
+        document.getElementById('outerColor').value = randomHex();
+        document.getElementById('filterLabel').value = 'Random ' + randomType;
+        
+        // Randomize visual parameters
+        document.getElementById('hardness').value = Math.floor(Math.random() * 101); // 0-100
+        document.getElementById('hardVal').innerText = document.getElementById('hardness').value;
+        
+        document.getElementById('rotation').value = Math.floor(Math.random() * 361); // 0-360
+        document.getElementById('rotVal').innerText = document.getElementById('rotation').value;
+        
+        document.getElementById('spiderLegs').value = Math.floor(Math.random() * 7) + 2; // 2-8
+        document.getElementById('legWidth').value = (Math.random() * 2 + 0.5).toFixed(1); // 0.5-2.5
+        
+        document.getElementById('ringStart').value = Math.floor(Math.random() * 70) + 20; // 20-90
+        document.getElementById('ringWidth').value = (Math.random() * 4 + 1).toFixed(1); // 1-5
+        
+        document.getElementById('offsetDist').value = Math.floor(Math.random() * 90) + 10; // 10-100
+        document.getElementById('sectorAngle').value = Math.floor(Math.random() * 340) + 10; // 10-350
+        document.getElementById('angVal').innerText = document.getElementById('sectorAngle').value;
+        
+        document.getElementById('arcWidth').value = (Math.random() * 8 + 1).toFixed(1); // 1-9
+        
+        toggleSettings();
+        document.getElementById('addBtn').click();
     };
 
     canvas.addEventListener('click', e => {
