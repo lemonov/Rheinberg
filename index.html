@@ -440,44 +440,55 @@
             { name: 'Deep Sea', type: 'solid', c0: '#000088', c1: '#00ffff' },
             { name: 'Magenta Sun', type: 'solid', c0: '#aa00aa', c1: '#ff00ff' },
             { name: 'Bio Neon', type: 'solid', c0: '#ccff00', c1: '#000000' },
-            { name: 'Ghost Stop', type: 'solid', c0: '#eeeeee', c1: '#ffffff' }
+            { name: 'Ghost Stop', type: 'solid', c0: '#eeeeee', c1: '#ffffff' },
+            { name: 'Soft Moonlight', type: 'solid', c0: '#404040', c1: '#d4d4d8', hard: 0 },
+            { name: 'Crimson Blur', type: 'solid', c0: '#7f1d1d', c1: '#fca5a5', hard: 50 }
         ],
         "Spider Stops": [
             { name: '3-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 3 },
             { name: '4-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 4 },
+            { name: '5-Leg Star', type: 'spider', c0: '#000000', c1: '#000000', legs: 5 },
             { name: '6-Leg Spider', type: 'spider', c0: '#000000', c1: '#000000', legs: 6 },
             { name: 'Thin Cross', type: 'spider', c0: '#000000', c1: '#000000', legs: 4, legW: 0.5 },
-            { name: 'Toxic Cross', type: 'spider', c0: '#00ff00', c1: '#004400', legs: 4 }
+            { name: 'Toxic Cross', type: 'spider', c0: '#00ff00', c1: '#004400', legs: 4 },
+            { name: 'Soft Edge Orb Weaver', type: 'spider', c0: '#000000', c1: '#000000', legs: 8, legW: 0.8, hard: 0 }
         ],
         "Advanced Spiders": [
             { name: 'Dual Ring Spider', type: 'ring_spider', c0: '#000000', c1: '#000000', legs: 3, ringS: 50, ringW: 3 },
             { name: 'Thick Ring Spider', type: 'ring_spider', c0: '#000000', c1: '#000000', legs: 4, ringS: 60, ringW: 5 },
             { name: 'Honeycomb Spider', type: 'grid_spider', c0: '#ffffff', c1: '#000000', legs: 3, holeSz: 2, holeSp: 3 },
-            { name: 'Dense Grid Spider', type: 'grid_spider', c0: '#ffffff', c1: '#000000', legs: 4, holeSz: 1.2, holeSp: 2 }
+            { name: 'Dense Grid Spider', type: 'grid_spider', c0: '#ffffff', c1: '#000000', legs: 4, holeSz: 1.2, holeSp: 2 },
+            { name: 'Soft Grid Spider', type: 'grid_spider', c0: '#ffffff', c1: '#000000', legs: 3, holeSz: 2.5, holeSp: 3.5, hard: 50 },
+            { name: 'Outer Ring Focus', type: 'ring_spider', c0: '#000000', c1: '#000000', legs: 6, ringS: 80, ringW: 1.5 }
         ],
         "Crescent & Oblique": [
             { name: 'Blue Crescent', type: 'crescent', c0: '#0000ff', c1: '#ffffff' },
             { name: 'Red Crescent', type: 'crescent', c0: '#ff0000', c1: '#ffffff' },
             { name: 'Gold Crescent', type: 'crescent', c0: '#aa8800', c1: '#000000' },
-            { name: 'Soft Gray Obl.', type: 'crescent', c0: '#333333', c1: '#cccccc' }
+            { name: 'Soft Gray Obl.', type: 'crescent', c0: '#333333', c1: '#cccccc' },
+            { name: 'Blurred Crescent', type: 'crescent', c0: '#0284c7', c1: '#ffffff', hard: 0 },
+            { name: 'Neon Edge Crescent', type: 'crescent', c0: '#10b981', c1: '#000000', hard: 25 }
         ],
         "Offset Patches": [
             { name: 'Patch 70%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 70 },
             { name: 'Patch 90%', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 90 },
             { name: 'Cyber Patch', type: 'offset', c0: '#00ffff', c1: '#ff00ff', offP: 80 },
-            { name: 'Solar Eclipse', type: 'offset', c0: '#000000', c1: '#ffcc00', offP: 10 }
+            { name: 'Solar Eclipse', type: 'offset', c0: '#000000', c1: '#ffcc00', offP: 10 },
+            { name: 'Smudged Eclipse', type: 'offset', c0: '#000000', c1: '#ffffff', offP: 40, hard: 0 }
         ],
         "Sectors & Arcs": [
             { name: 'Split Horiz.', type: 'half', c0: '#000000', c1: '#ffffff', rot: 0 },
             { name: 'Split Vert.', type: 'half', c0: '#000000', c1: '#ffffff', rot: 90 },
             { name: 'Day/Night', type: 'half', c0: '#000044', c1: '#ffaa00', rot: 45 },
             { name: 'Red/Blue Split', type: 'half', c0: '#ff0000', c1: '#0000ff', rot: -45 },
+            { name: 'Soft Split', type: 'half', c0: '#000000', c1: '#ffffff', rot: 25, hard: 20 },
             { name: 'Sector 45°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 45 },
             { name: 'Sector 90°', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 90 },
             { name: 'T-Sector', type: 'sector', c0: '#000000', c1: '#ffffff', ang: 270 },
             { name: 'Peripheral Arc 90°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 90, arcW: 4, rot: 0 },
             { name: 'Peripheral Arc 180°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 180, arcW: 6, rot: 0 },
-            { name: 'Peripheral Arc 270°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 270, arcW: 2, rot: 0 }
+            { name: 'Peripheral Arc 270°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 270, arcW: 2, rot: 0 },
+            { name: 'Glowing Halo Arc', type: 'arc', c0: '#000000', c1: '#facc15', ang: 120, arcW: 5, hard: 0 }
         ]
     };
 
@@ -577,7 +588,7 @@
         document.getElementById('filterLabel').value = 'Random ' + randomType;
         
         // Randomize visual parameters
-        document.getElementById('hardness').value = Math.floor(Math.random() * 101); // 0-100
+        document.getElementById('hardness').value = Math.random() > 0.5 ? 100 : 0; // High or None
         document.getElementById('hardVal').innerText = document.getElementById('hardness').value;
         
         document.getElementById('rotation').value = Math.floor(Math.random() * 361); // 0-360
