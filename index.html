@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Advanced Microscope Filter Designer Pro v1.1.0</title>
+    <title>Advanced Microscope Filter Designer Pro v1.1.2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
@@ -41,7 +41,7 @@
         main{ padding:20px; display:flex; justify-content:center; position: relative; overflow-x: auto; }
 
         /* Conditional Visibility Area */
-        .controls-area { min-height: 80px; margin-bottom: 5px; }
+        .controls-area { height: 110px; margin-bottom: 5px; }
         .control-group { display: none; margin-bottom: 12px; }
         .control-group.visible { display: block; }
 
@@ -94,10 +94,11 @@
         canvas#filterCanvas{ background:white; box-shadow:0 10px 30px rgba(0,0,0,.5); cursor: crosshair; }
 
         @media print{
-            aside, .info-cloud{display:none !important;}
-            body{ display: block; background:white; }
-            canvas#filterCanvas{ width:210mm !important; height:297mm !important; box-shadow:none; }
-            @page{ size:A4; margin:0; }
+            aside, .info-cloud, .disclaimer{display:none !important;}
+            body{ display: block; background:white; margin:0; padding:0; height: auto; min-height: 0; }
+            main{ padding:0; margin:0; overflow: visible; display: block; }
+            canvas#filterCanvas{ width:210mm !important; height:297mm !important; box-shadow:none; display: block; margin: 0; padding:0; page-break-inside: avoid; }
+            @page{ size:A4 portrait; margin:0; }
         }
     </style>
 </head>
@@ -113,7 +114,7 @@
                 <path d="M12 2V5M12 19V22M2 12H5M19 12H22" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
         </div>
-        <h1>Filter Designer <span>Pro v1.1.0</span></h1>
+        <h1>Filter Designer <span>Pro v1.1.2</span></h1>
     </div>
 
     <label>Filter Type
@@ -127,6 +128,7 @@
             <option value="half">Half Moon</option>
             <option value="sector">Sector (Pie)</option>
             <option value="arc">Peripheral Arc</option>
+            <option value="phase_contrast">Phase Contrast (Annulus)</option>
         </select>
     </label>
 
@@ -199,6 +201,13 @@
 
         <div id="settings-arc" class="control-group">
             <label>Arc Width (mm) <input type="number" id="arcWidth" value="4" step="0.1"></label>
+        </div>
+
+        <div id="settings-annulus" class="control-group">
+            <div class="grid-2">
+                <label>Annulus Radius (mm) <input type="number" id="annulusPos" value="12" step="0.1"></label>
+                <label>Annulus Width (mm) <input type="number" id="annulusWidth" value="2" step="0.1"></label>
+            </div>
         </div>
     </div>
 
@@ -368,6 +377,22 @@
                 c.arc(0,0,Math.max(0.1, this.r1 - aw), a/2 - Math.PI/2, -a/2 - Math.PI/2, true);
                 c.fill();
                 c.restore();
+            } else if (this.type === 'phase_contrast') {
+                // Opaque disc
+                c.fillStyle = this.c1;
+                c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
+                // Clip to outer circle
+                c.save(); c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.clip();
+                if (hard < 100 && !preview) c.filter = `blur(${toPx((100 - hard) * 0.05)}px)`;
+                // Annular ring
+                const rMid = toPx(this.annPos || 12) / 2;
+                const annW = toPx(this.annW || 2) / 2;
+                c.fillStyle = this.c0;
+                c.beginPath();
+                c.arc(0,0, rMid + annW, 0, Math.PI*2);
+                c.arc(0,0, Math.max(0.1, rMid - annW), 0, Math.PI*2, true);
+                c.fill();
+                c.restore();
             } else {
                 if (hard >= 99) {
                     c.fillStyle = this.c1; c.beginPath(); c.arc(0,0,this.r1,0,Math.PI*2); c.fill();
@@ -401,17 +426,34 @@
     }
 
     let filters = [];
-    function redraw() {
-        ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    function redraw(dryRunFilters = null) {
         let x = 0, y = 0, rowH = 0;
-        filters.forEach(f => {
+        let isSimulating = dryRunFilters !== null;
+        let filtersToDraw = dryRunFilters || filters;
+
+        if (!isSimulating) {
+            ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        }
+        
+        for (let i = 0; i < filtersToDraw.length; i++) {
+            const f = filtersToDraw[i];
             const bw = f.boardW || (f.r1 * 2 + MM_TO_PX(4));
             const bh = f.boardH || (f.r1 * 2 + MM_TO_PX(14));
+            
             if (x + bw > canvas.width) { x = 0; y += rowH; rowH = 0; }
+            
+            // Check if it overflows the page height
+            if (y + bh > canvas.height) {
+                return false; // Fits no more!
+            }
+            
             f.x = x + bw/2; f.y = y + bh/2;
-            f.draw(ctx, document.getElementById('showCutoutGrid').checked);
+            if (!isSimulating) {
+                f.draw(ctx, document.getElementById('showCutoutGrid').checked);
+            }
             x += bw; rowH = Math.max(rowH, bh);
-        });
+        }
+        return true;
     }
 
     const toggleSettings = () => {
@@ -424,6 +466,7 @@
         if (type === 'ring_spider') document.getElementById('settings-ring').classList.add('visible');
         if (type === 'grid_spider') document.getElementById('settings-grid').classList.add('visible');
         if (type === 'arc') document.getElementById('settings-arc').classList.add('visible');
+        if (type === 'phase_contrast') document.getElementById('settings-annulus').classList.add('visible');
     };
 
     document.getElementById('centerType').onchange = toggleSettings;
@@ -489,6 +532,15 @@
             { name: 'Peripheral Arc 180°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 180, arcW: 6, rot: 0 },
             { name: 'Peripheral Arc 270°', type: 'arc', c0: '#000000', c1: '#ffffff', ang: 270, arcW: 2, rot: 0 },
             { name: 'Glowing Halo Arc', type: 'arc', c0: '#000000', c1: '#facc15', ang: 120, arcW: 5, hard: 0 }
+        ],
+        "Phase Contrast": [
+            { name: 'Ph1 (10×)', type: 'phase_contrast', c0: '#ffffff', c1: '#000000', annPos: 11, annW: 1.5 },
+            { name: 'Ph2 (20–40×)', type: 'phase_contrast', c0: '#ffffff', c1: '#000000', annPos: 13, annW: 2 },
+            { name: 'Ph3 (100×)', type: 'phase_contrast', c0: '#ffffff', c1: '#000000', annPos: 14.5, annW: 2.5 },
+            { name: 'Positive Contrast', type: 'phase_contrast', c0: '#000000', c1: '#ffffff', annPos: 13, annW: 2 },
+            { name: 'Negative Contrast', type: 'phase_contrast', c0: '#ffffff', c1: '#000000', annPos: 13, annW: 2 },
+            { name: 'Soft Edge Annulus', type: 'phase_contrast', c0: '#ffffff', c1: '#000000', annPos: 12, annW: 3, hard: 0 },
+            { name: 'Wide Band Ph2', type: 'phase_contrast', c0: '#ffffff', c1: '#000000', annPos: 13, annW: 5 }
         ]
     };
 
@@ -528,6 +580,8 @@
                 if (p.offP !== undefined) document.getElementById('offsetDist').value = p.offP;
                 if (p.ang !== undefined) document.getElementById('sectorAngle').value = p.ang;
                 if (p.arcW !== undefined) document.getElementById('arcWidth').value = p.arcW;
+                if (p.annPos !== undefined) document.getElementById('annulusPos').value = p.annPos;
+                if (p.annW !== undefined) document.getElementById('annulusWidth').value = p.annW;
                 if (p.hard !== undefined) {
                     document.getElementById('hardness').value = p.hard;
                     document.getElementById('hardVal').innerText = p.hard;
@@ -569,15 +623,28 @@
             holeSp: +document.getElementById('holeSpacing').value,
             offP: +document.getElementById('offsetDist').value,
             ang: +document.getElementById('sectorAngle').value,
-            arcW: +document.getElementById('arcWidth').value
+            arcW: +document.getElementById('arcWidth').value,
+            annPos: +document.getElementById('annulusPos').value,
+            annW: +document.getElementById('annulusWidth').value
         };
-        filters.push(new Filter({...o, mirrored: false}));
-        if (document.getElementById('addCompanion').checked) filters.push(new Filter({...o, mirrored: true, label: o.label + ' (M)'}));
+        
+        const newFilter = new Filter({...o, mirrored: false});
+        const addM = document.getElementById('addCompanion').checked;
+        const newArr = [...filters, newFilter];
+        if (addM) newArr.push(new Filter({...o, mirrored: true, label: o.label + ' (M)'}));
+
+        // Check if fits
+        if (!redraw(newArr)) {
+            alert("No more space on the A4 sheet! Clear to add more.");
+            return;
+        }
+
+        filters = newArr;
         redraw();
     };
 
     document.getElementById('randomBtn').onclick = () => {
-        const types = ['solid', 'spider', 'ring_spider', 'grid_spider', 'crescent', 'offset', 'half', 'sector', 'arc'];
+        const types = ['solid', 'spider', 'ring_spider', 'grid_spider', 'crescent', 'offset', 'half', 'sector', 'arc', 'phase_contrast'];
         const randomType = types[Math.floor(Math.random() * types.length)];
         
         const randomHex = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
@@ -605,6 +672,9 @@
         document.getElementById('angVal').innerText = document.getElementById('sectorAngle').value;
         
         document.getElementById('arcWidth').value = (Math.random() * 8 + 1).toFixed(1); // 1-9
+        
+        document.getElementById('annulusPos').value = (Math.random() * 8 + 8).toFixed(1); // 8-16mm
+        document.getElementById('annulusWidth').value = (Math.random() * 4 + 1).toFixed(1); // 1-5mm
         
         toggleSettings();
         document.getElementById('addBtn').click();
