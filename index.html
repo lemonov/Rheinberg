@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Advanced Microscope Filter Designer Pro v1.1.0</title>
+    <title>Advanced Microscope Filter Designer Pro v1.1.2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
@@ -41,7 +41,7 @@
         main{ padding:20px; display:flex; justify-content:center; position: relative; overflow-x: auto; }
 
         /* Conditional Visibility Area */
-        .controls-area { min-height: 80px; margin-bottom: 5px; }
+        .controls-area { height: 110px; margin-bottom: 5px; }
         .control-group { display: none; margin-bottom: 12px; }
         .control-group.visible { display: block; }
 
@@ -94,10 +94,11 @@
         canvas#filterCanvas{ background:white; box-shadow:0 10px 30px rgba(0,0,0,.5); cursor: crosshair; }
 
         @media print{
-            aside, .info-cloud{display:none !important;}
-            body{ display: block; background:white; }
-            canvas#filterCanvas{ width:210mm !important; height:297mm !important; box-shadow:none; }
-            @page{ size:A4; margin:0; }
+            aside, .info-cloud, .disclaimer{display:none !important;}
+            body{ display: block; background:white; margin:0; padding:0; height: auto; min-height: 0; }
+            main{ padding:0; margin:0; overflow: visible; display: block; }
+            canvas#filterCanvas{ width:210mm !important; height:297mm !important; box-shadow:none; display: block; margin: 0; padding:0; page-break-inside: avoid; }
+            @page{ size:A4 portrait; margin:0; }
         }
     </style>
 </head>
@@ -113,7 +114,7 @@
                 <path d="M12 2V5M12 19V22M2 12H5M19 12H22" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
         </div>
-        <h1>Filter Designer <span>Pro v1.1.0</span></h1>
+        <h1>Filter Designer <span>Pro v1.1.2</span></h1>
     </div>
 
     <label>Filter Type
@@ -401,17 +402,34 @@
     }
 
     let filters = [];
-    function redraw() {
-        ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    function redraw(dryRunFilters = null) {
         let x = 0, y = 0, rowH = 0;
-        filters.forEach(f => {
+        let isSimulating = dryRunFilters !== null;
+        let filtersToDraw = dryRunFilters || filters;
+
+        if (!isSimulating) {
+            ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        }
+        
+        for (let i = 0; i < filtersToDraw.length; i++) {
+            const f = filtersToDraw[i];
             const bw = f.boardW || (f.r1 * 2 + MM_TO_PX(4));
             const bh = f.boardH || (f.r1 * 2 + MM_TO_PX(14));
+            
             if (x + bw > canvas.width) { x = 0; y += rowH; rowH = 0; }
+            
+            // Check if it overflows the page height
+            if (y + bh > canvas.height) {
+                return false; // Fits no more!
+            }
+            
             f.x = x + bw/2; f.y = y + bh/2;
-            f.draw(ctx, document.getElementById('showCutoutGrid').checked);
+            if (!isSimulating) {
+                f.draw(ctx, document.getElementById('showCutoutGrid').checked);
+            }
             x += bw; rowH = Math.max(rowH, bh);
-        });
+        }
+        return true;
     }
 
     const toggleSettings = () => {
@@ -571,8 +589,19 @@
             ang: +document.getElementById('sectorAngle').value,
             arcW: +document.getElementById('arcWidth').value
         };
-        filters.push(new Filter({...o, mirrored: false}));
-        if (document.getElementById('addCompanion').checked) filters.push(new Filter({...o, mirrored: true, label: o.label + ' (M)'}));
+        
+        const newFilter = new Filter({...o, mirrored: false});
+        const addM = document.getElementById('addCompanion').checked;
+        const newArr = [...filters, newFilter];
+        if (addM) newArr.push(new Filter({...o, mirrored: true, label: o.label + ' (M)'}));
+
+        // Check if fits
+        if (!redraw(newArr)) {
+            alert("No more space on the A4 sheet! Clear to add more.");
+            return;
+        }
+
+        filters = newArr;
         redraw();
     };
 
